@@ -44,6 +44,8 @@ switch ($action) {
 		$world = [
 			'id' => 0,
 			'name' => Website::getServerConfig()->getValue('serverName'),
+			'externaladdress' => Website::getServerConfig()->getValue('ip'),
+			'externalport' => $port,
 			'externaladdressprotected' => Website::getServerConfig()->getValue('ip'),
 			'externalportprotected' => $port,
 			'externaladdressunprotected' => Website::getServerConfig()->getValue('ip'),
@@ -63,10 +65,10 @@ switch ($action) {
 		$columns = 'name, level, sex, vocation, looktype, lookhead, lookbody, looklegs, lookfeet, lookaddons, deleted, lastlogin';
 		
 		$account = new Account();
-		$account->loadByName($result->accountname);
+		$account->loadByEmail($result->email);
 		$current_password = Website::encryptPassword($result->password);
 		if (!$account->isLoaded() || !$account->isValidPassword($result->password)) {
-			sendError('Account name or password is not correct.');
+			sendError('Email or password is not correct.');
 		}
         $players = $SQL->query("select {$columns} from players where account_id = " . $account->getId() . " order by name asc")->fetchAll();
 		foreach ($players as $player) {
@@ -75,7 +77,7 @@ switch ($action) {
 		$worlds = [$world];
 		$playdata = compact('worlds', 'characters');
 		$session = [
-			'sessionkey' => "$result->accountname\n$result->password",
+			'sessionkey' => "$result->email\n$result->password",
 			'lastlogintime' => (!$account) ? 0 : $account->getLastLogin(),
 			'ispremium' => (!$account) ? true : $account->isPremium(),
 			'premiumuntil' => (!$account) ? 0 : (time() + ($account->getPremDays() * 86400)),
