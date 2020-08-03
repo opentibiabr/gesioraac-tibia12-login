@@ -32,9 +32,13 @@ switch ($action) {
 		]));
 	break;
 	case 'boostedcreature':
+		$boostDB = $SQL->query("select * from " . $SQL->tableName('boosted_creature'))->fetchAll();
+		foreach ($boostDB as $Tableboost) {
 		die(json_encode([
-			'boostedcreature' => false,
+			'boostedcreature' => true,
+			'raceid' => intval($Tableboost['raceid'])
 		]));
+		}
 	break;
 	case 'login':
 	
@@ -70,7 +74,7 @@ switch ($action) {
 		if (!$account->isLoaded() || !$account->isValidPassword($result->password)) {
 			sendError('Email or password is not correct.');
 		}
-        $players = $SQL->query("select {$columns} from players where account_id = " . $account->getId() . " order by name asc")->fetchAll();
+        	$players = $SQL->query("select {$columns} from players where account_id = " . $account->getId() . " order by name asc")->fetchAll();
 		foreach ($players as $player) {
 			$characters[] = create_char($player);
 		}
