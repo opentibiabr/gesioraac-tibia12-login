@@ -17,8 +17,9 @@ $action = isset($result->type) ? $result->type : '';
 
 switch ($action) {
 	case 'cacheinfo':
+		$playersonline = $SQL->query("select count(*) from `players_online`")->fetchAll();
 		die(json_encode([
-			'playersonline' => $status['players'],
+			'playersonline' => (intval($playersonline[0][0])),
 			'twitchstreams' => 0,
 			'twitchviewer' => 0,
 			'gamingyoutubestreams' => 0,
@@ -74,10 +75,52 @@ switch ($action) {
 		if (!$account->isLoaded() || !$account->isValidPassword($result->password)) {
 			sendError('Email or password is not correct.');
 		}
-        	$players = $SQL->query("select {$columns} from players where account_id = " . $account->getId() . " order by name asc")->fetchAll();
+		$players = $SQL->query("select {$columns} from players where account_id = " . $account->getId() . " order by name asc")->fetchAll();
 		foreach ($players as $player) {
 			$characters[] = create_char($player);
 		}
+
+		$save = false;
+		$timeNow = time();
+		$query = $SQL->query("select `premdays`, `lastday` from `accounts` where `id` = " . $account->getId());
+			if($query->rowCount() > 0) {
+				$query = $query->fetch();
+				$premDays = (int)$query['premdays'];
+				$lastDay = (int)$query['lastday'];
+				$lastLogin = $lastDay;
+			}
+			else {
+				sendError("Error while fetching your account data. Please contact admin.");
+		}
+		if($premDays != 0 && $premDays != PHP_INT_MAX ) {
+			if($lastDay == 0) {
+				$lastDay = $timeNow;
+				$save = true;
+			} else {
+				$days = (int)(($timeNow - $lastDay) / 86400);
+				if($days > 0) {
+					if($days >= $premDays) {
+						$premDays = 0;
+						$lastDay = 0;
+					} else {
+						$premDays -= $days;
+						$reminder = (int)(($timeNow - $lastDay) % 86400);
+						$lastDay = $timeNow - reminder;
+					}
+
+					$save = true;
+				}
+			}
+		} else if ($lastDay != 0) {
+			$lastDay = 0;
+			$save = true;
+		}
+		if($save) {
+			$SQL->query("update `accounts` set `premdays` = " . $premDays . ", `lastday` = " . $lastDay . " where `id` = " . $account->getId());
+		}
+		$premiumAccount = $premDays > 0;
+		$timePremium = time() + ($premDays * 86400);
+
 		$worlds = [$world];
 		$playdata = compact('worlds', 'characters');
 		$session = [
