@@ -2,8 +2,8 @@
 header('Content-Type: application/json');
 
 if(!defined('INITIALIZED'))
-    exit;
-    
+	exit;
+
 # error function
 function sendError($msg){
 	$ret = [];
@@ -11,6 +11,34 @@ function sendError($msg){
 	$ret["errorMessage"] = $msg;
 	die(json_encode($ret));
 }
+# event schedule function
+function parseEvent($table1, $date, $table2, $bool){
+if ($table1) {
+	if ($date) {
+		if ($table2) {
+			$date = $table1->getAttribute('startdate');
+			return date_create("{$date}")->format('U');
+		} else {
+			$date = $table1->getAttribute('enddate');
+			return date_create("{$date}")->format('U');
+		}
+	} else {
+		foreach($table1 as $attr) {
+			if ($attr) {
+				if ($bool) {
+					if (intval($attr->getAttribute($table2)) > 0) {
+						return true;
+					}
+						return false;
+				}
+				return $attr->getAttribute($table2);
+			}
+		}
+	}
+}
+	return;
+}
+
 $request = file_get_contents('php://input');
 $result = json_decode($request);
 $action = isset($result->type) ? $result->type : '';
@@ -26,11 +54,33 @@ switch ($action) {
 			'gamingyoutubeviewer' => 0
 		]));
 	break;
-	
 	case 'eventschedule':
-		die(json_encode([
-			'eventlist' => []
-		]));
+	$eventlist = array();
+	$lastupdatetimestamp = time();
+	$file_path = Website::getWebsiteConfig()->getValue('serverPath') . 'data/XML/events.xml';
+	if (!Website::fileExists($file_path)) {
+		die(json_encode([]));
+		break;
+	}
+	$xml = new DOMDocument;
+	$xml->load($file_path);
+	$tableevent = $xml->getElementsByTagName('event');
+	foreach ($tableevent as $event) {
+		if ($event) {
+		$tmplist = array();
+		$tmplist['colorlight'] = parseEvent($event->getElementsByTagName('colors'), false, 'colorlight', false);
+		$tmplist['colordark'] = parseEvent($event->getElementsByTagName('colors'), false, 'colordark', false);
+		$tmplist['description'] = parseEvent($event->getElementsByTagName('description'), false, 'description', false);
+		$tmplist['displaypriority'] = (intval(parseEvent($event->getElementsByTagName('details'), false, 'displaypriority', false)));
+		$tmplist['enddate'] = (intval(parseEvent($event, true, false, false)));
+		$tmplist['isseasonal'] = parseEvent($event->getElementsByTagName('details'), false, 'isseasonal', true);
+		$tmplist['name'] = $event->getAttribute('name');
+		$tmplist['startdate'] = (intval(parseEvent($event, true, true, false)));
+		$tmplist['specialevent'] = (intval(parseEvent($event->getElementsByTagName('details'), false, 'specialevent', false)));
+		$eventlist[] = $tmplist;
+		}
+	}
+	die(json_encode(compact('eventlist', 'lastupdatetimestamp')));
 	break;
 	case 'boostedcreature':
 		$boostDB = $SQL->query("select * from " . $SQL->tableName('boosted_creature'))->fetchAll();
