@@ -117,7 +117,7 @@ switch ($action) {
 		$account = null;
 		
 		// common columns
-		$columns = 'name, level, sex, vocation, looktype, lookhead, lookbody, looklegs, lookfeet, lookaddons, deleted, lastlogin';
+		$columns = 'name, level, sex, vocation, looktype, lookhead, lookbody, looklegs, lookfeet, lookaddons, lastlogin';
 		
 		$account = new Account();
 		$account->loadByEmail($result->email);
@@ -125,7 +125,7 @@ switch ($action) {
 		if (!$account->isLoaded() || !$account->isValidPassword($result->password)) {
 			sendError('Email or password is not correct.');
 		}
-		$players = $SQL->query("select {$columns} from players where account_id = " . $account->getId() . " order by name asc")->fetchAll();
+		$players = $SQL->query("select {$columns} from players where account_id = " . $account->getId() . " AND deleted = 0 order by name asc")->fetchAll();
 		foreach ($players as $player) {
 			$characters[] = create_char($player);
 		}
