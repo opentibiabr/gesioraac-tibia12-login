@@ -117,7 +117,7 @@ switch ($action) {
 		$account = null;
 		
 		// common columns
-		$columns = 'name, level, sex, vocation, looktype, lookhead, lookbody, looklegs, lookfeet, lookaddons, lastlogin';
+		$columns = 'name, level, sex, vocation, looktype, lookhead, lookbody, looklegs, lookfeet, lookaddons, lastlogin, isreward';
 		
 		$account = new Account();
 		$account->loadByEmail($result->email);
@@ -211,7 +211,7 @@ function create_char($player) {
 		'ishidden' => intval($player['deletion']) === 1,
 		'istournamentparticipant' => false,
 		'ismaincharacter' => true,
-		'dailyrewardstate' => 1,
+		'dailyrewardstate' => intval($player['isreward']),
 		'remainingdailytournamentplaytime' => 0
 	];
 }
