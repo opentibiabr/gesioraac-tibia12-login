@@ -158,7 +158,7 @@ switch ($action) {
 					} else {
 						$premDays -= $days;
 						$reminder = (int)(($timeNow - $lastDay) % 86400);
-						$lastDay = $timeNow - reminder;
+						$lastDay = $timeNow - $reminder;
 					}
 
 					$save = true;
