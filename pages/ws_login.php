@@ -117,7 +117,7 @@ switch ($action) {
 		$account = null;
 		
 		// common columns
-		$columns = 'name, level, sex, vocation, looktype, lookhead, lookbody, looklegs, lookfeet, lookaddons, lastlogin, isreward';
+		$columns = 'name, level, sex, vocation, looktype, lookhead, lookbody, looklegs, lookfeet, lookaddons, lastlogin, isreward, istutorial';
 		
 		$account = new Account();
 		$account->loadByEmail($result->email);
@@ -202,7 +202,7 @@ function create_char($player) {
 		'worldid' => 0,
 		'name' => $player['name'],
 		'ismale' => intval($player['sex']) === 1,
-		'tutorial' => false, //intval($player['lastlogin']) === 0,
+		'tutorial' => (bool)$player['istutorial'], //intval($player['lastlogin']) === 0,
 		'level' => intval($player['level']),
 		'vocation' => Website::getVocationName($player['vocation']),
 		'outfitid' => intval($player['looktype']),
